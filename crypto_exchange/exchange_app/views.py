@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from exchange_app.models import Condition
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from .serializers import ConditionSerializer, UsersSerializer
 from .models import Condition, Users, Wallets
 
@@ -32,6 +32,7 @@ def get_time_value(request):
 def get_users(request): 
     results = Users.objects.all()
     serializer = UsersSerializer(results, many=True) 
+    # print(UsersSerializer(Users.objects.all(), many=True).data)
     return Response(serializer.data) 
 
 
