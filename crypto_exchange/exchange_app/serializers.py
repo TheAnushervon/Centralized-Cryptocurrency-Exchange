@@ -9,7 +9,7 @@ class ConditionSerializer(serializers.ModelSerializer):
 class UsersSerializer(serializers.ModelSerializer): 
     class Meta: 
         model = Users
-        fields = ["id", "username", "email", "password", "first_name", "last_name", "kyc_details"]
+        fields = ["id", "username", "email", "password", "first_name", "last_name", "is_active", "is_staff", "jwt_tokens"]
 
 class WalletsSerializer(serializers.ModelSerializer): 
     class Meta: 

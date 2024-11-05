@@ -39,9 +39,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'exchange_app', 
     'rest_framework',
-    'drf_yasg'
+    'drf_yasg', 
+    'rest_framework_simplejwt', 
     
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -110,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+AUTH_USER_MODEL='exchange_app.Users'
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 

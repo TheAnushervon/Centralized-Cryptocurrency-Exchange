@@ -10,5 +10,7 @@ urlpatterns = [
     path ('api/wallets/withdraw/<int:user_id>/', views.withdraw_currency, name="withdraw_currency"),
     path('api/wallets/<int:user_id>/', views.get_wallets_currency, name="get_wallets_currency"), 
     path ('api/wallets/<int:user_id>/', views.get_all_wallets_currencies, name="get_all_wallets_currencies"), 
-
+    path('api/login', views.login, name='login'), 
+    path('api/register/', views.register, name='register'), 
+    path('api/logout', views.logout, name='logout')
 ]

@@ -8,6 +8,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status 
 
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate,  get_user_model
+from django.contrib.auth.hashers import check_password
+import json 
 # Create your views here.
 def test(request): 
     results = Condition.objects.all().values('time', 'value')
@@ -17,22 +21,16 @@ def test(request):
 
 @api_view (['GET'])
 def get_time_value(request): 
-    # results = Condition.objects.all().values('time', 'value')
+  
     results = Condition.objects.all()
     serialized_data =ConditionSerializer(results, many=True)
     return JsonResponse(list(results), safe = False) 
-    # return Response(results)
-# @api_view(['GET'])
-# def get_users(request): 
-#     results = Users.objects.all().values('first_name', 'username')
-#     return JsonResponse(list(results), safe=False)
-
+  
 
 @api_view(['GET'])
 def get_users(request): 
     results = Users.objects.all()
     serializer = UsersSerializer(results, many=True) 
-    # print(UsersSerializer(Users.objects.all(), many=True).data)
     return Response(serializer.data) 
 
 @api_view(['GET'])
@@ -43,10 +41,10 @@ def get_wallets_currency(request, currency, user_id):
         return Response({"error": "There is no such currency for this user"}, status=status.HTTP_404_NOT_FOUND)
     
     results = Wallets.objects.get(currency=currency, user_id=user_id)
-    print(results) 
-    print(results.balance)
+    
+    
     serializer = WalletsSerializer(results, many=True)
-    print(serializer.data["created_at"])
+    
     return Response(serializer.data) 
 
 @api_view(['GET'])
@@ -98,3 +96,71 @@ def deposit(request):
         return Response({'message': f'Wallet created and {amount} {currency} deposited'}, status=status.HTTP_201_CREATED)
     else:
         return Response({'message': f'Successfully deposited {amount} {currency}'}, status=status.HTTP_200_OK)
+    
+
+@api_view(['POST'])
+def logout (request): 
+    gmail = request.data.get('gmail')
+    username = request.data.get('username')
+    results = Users.objects.filter(username=username, email=gmail)
+    login = False
+    for value in results: 
+        jwt = value.jwt_tokens
+        if jwt: 
+            jwt_dict = json.loads(jwt) 
+            if(jwt_dict.get('access_token')): 
+                login = True
+                break 
+    
+
+    if login: 
+        Users.objects.filter(username=username, email=gmail).update(jwt_tokens=json.dumps({}))
+        return Response({"message": f"Successfully log out {username} {gmail}"}, status=status.HTTP_200_OK)
+    else: 
+        return Response({"error": "Such user not loggined"}, status= status.HTTP_404_NOT_FOUND)
+@api_view(['POST'])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+
+    
+    User = get_user_model()
+
+    try:
+        
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        user = None
+    next = False 
+    if (user.password == password):
+        next = True 
+    
+    if user and next:
+        
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        
+        user.jwt_tokens = json.dumps({
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        })
+        user.save()
+
+        return Response({
+            'access': access_token,
+            'refresh': refresh_token,
+        })
+    else:
+        return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+@api_view(['POST'])
+def register(request):
+    if request.method == 'POST':
+        serializer = UsersSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
