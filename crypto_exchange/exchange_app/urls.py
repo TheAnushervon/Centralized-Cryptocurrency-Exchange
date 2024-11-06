@@ -12,5 +12,9 @@ urlpatterns = [
     path ('api/wallets/<int:user_id>/', views.get_all_wallets_currencies, name="get_all_wallets_currencies"), 
     path('api/login', views.login, name='login'), 
     path('api/register/', views.register, name='register'), 
-    path('api/logout', views.logout, name='logout')
-]
+    path('api/logout', views.logout, name='logout'), 
+    path('api/orders/place', views.place_order, name = "place_order"), 
+    path ('api/orders', views.orders, name = "orders"), 
+    path ('api/orders/<int:order_id>/', views.specific_order, name = "specific_order"), 
+    path('api/orders/<int:order_id>/cancel', views.cancel_order, name="cancel_order"), 
+]   

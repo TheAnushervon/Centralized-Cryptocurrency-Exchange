@@ -72,3 +72,24 @@ class Wallets (models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta: 
         db_table = "wallets"
+
+class Orders(models.Model):
+    BUY = 'buy'
+    SELL = 'sell'
+    ORDER_TYPES = [
+        (BUY, 'Buy'),
+        (SELL, 'Sell'),
+    ]
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, db_column='user_id')
+    type = models.CharField(max_length=4, choices=ORDER_TYPES)
+    price = models.DecimalField(max_digits=18, decimal_places=6)  # Price per unit
+    quantity = models.DecimalField(max_digits=18, decimal_places=6)  # Quantity of crypto
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, default='open')  # e.g., open, completed, cancelled
+    coin = models.CharField(max_length=10)
+    def __str__(self):
+        return f"{self.type.capitalize()} Order: {self.quantity} at {self.price}"
+    class Meta: 
+        db_table = "orders"
+        

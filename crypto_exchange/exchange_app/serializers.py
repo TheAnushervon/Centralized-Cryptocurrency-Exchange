@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Condition, Users, Wallets
+from .models import Condition, Users, Wallets, Orders
 
 class ConditionSerializer(serializers.ModelSerializer): 
     class Meta: 
@@ -15,3 +15,8 @@ class WalletsSerializer(serializers.ModelSerializer):
     class Meta: 
         model = Wallets 
         fields = ["id", "user_id", "currency", "balance", "created_at"]
+
+class OrdersSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = Orders
+        fields = '__all__'

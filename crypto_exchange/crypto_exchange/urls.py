@@ -25,6 +25,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from . import views 
+
 schema_view = get_schema_view(
    openapi.Info(
       title="Snippets API",
@@ -45,7 +47,7 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('', include('exchange_app.urls')), 
-
+    path ('', views.home, name = 'home'), 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

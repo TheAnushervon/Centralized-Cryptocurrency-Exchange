@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from exchange_app.models import Condition
 from django.http import JsonResponse, HttpResponse
-from .serializers import ConditionSerializer, UsersSerializer, WalletsSerializer
-from .models import Condition, Users, Wallets
+from .serializers import ConditionSerializer, UsersSerializer, WalletsSerializer, OrdersSerializer
+from .models import Condition, Users, Wallets, Orders 
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -164,3 +164,38 @@ def register(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+def place_order(request): 
+    username = request.data.get('username')
+    type = request.data.get('type')
+    price = request.data.get('price')
+    quantity = request.data.get('quantity')
+    coin = request.data.get('coin')
+    user = Users.objects.get(username=username)
+    orders = Orders.objects.create(user = user, type = type, price = price, quantity = quantity, coin = coin)
+    orders.save()
+    return HttpResponse(f'<h1>{orders}</h1>')
+    return HttpResponse(f'<h1>{type}</h1>\n<h1>{price}</h1>\n<h1>{quantity}</h1>\n<h1>{coin}</h1>')
+    #validation in this process 
+    
+    
+@api_view(['GET'])
+def orders (request): 
+    orders = Orders.objects.all()
+    serializer = OrdersSerializer(orders, many=True) 
+    return Response(serializer.data) 
+@api_view(['GET'])
+def specific_order(request, order_id): 
+    order = Orders.objects.get(id = order_id)
+    serializer = OrdersSerializer(order) 
+    return Response(serializer.data) 
+
+@api_view(['GET'])
+def cancel_order(request, order_id): 
+    try: 
+        order = Orders.objects.get(id=order_id)
+    except: 
+        return Response({"error":"No Such order_id exist"}, status=status.HTTP_404_NOT_FOUND)
+    order.delete()
+    return Response({"message": f"Successfully delete order"}, status=status.HTTP_200_OK)
