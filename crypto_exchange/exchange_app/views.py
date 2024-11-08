@@ -43,7 +43,7 @@ def get_wallets_currency(request, currency, user_id):
     results = Wallets.objects.get(currency=currency, user_id=user_id)
     
     
-    serializer = WalletsSerializer(results, many=True)
+    serializer = WalletsSerializer(results)
     
     return Response(serializer.data) 
 

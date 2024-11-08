@@ -1,12 +1,15 @@
 <script>
     import {UsersStore} from '../../users-store'
     import {onMount} from 'svelte'
+    
     onMount (async function() {
+        // with condition we preventing for calling api each time
+        if (!$UsersStore.length){
         const endpoint = 'http://localhost:8000/api/get_users/'
         const response = await fetch (endpoint)
         const data = await response.json() 
         console.log(data) 
-        UsersStore.set(data)
+        UsersStore.set(data)}
     })
 </script>
 <table>
