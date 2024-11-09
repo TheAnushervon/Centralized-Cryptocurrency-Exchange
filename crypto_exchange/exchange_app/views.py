@@ -2,7 +2,7 @@ from django.shortcuts import render
 from exchange_app.models import Condition
 from django.http import JsonResponse, HttpResponse
 from .serializers import ConditionSerializer, UsersSerializer, WalletsSerializer, OrdersSerializer
-from .models import Condition, Users, Wallets, Orders 
+from .models import Condition, Users, Wallets, Orders, Verification
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -16,6 +16,7 @@ import json
 from django.conf import settings 
 from django.core.mail import send_mail
 
+import random
 # Create your views here.
 def test(request): 
     results = Condition.objects.all().values('time', 'value')
@@ -162,13 +163,48 @@ def login(request):
     
 @api_view(['POST'])
 def register(request):
-    if request.method == 'POST':
-        serializer = UsersSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    firstname = request.data.get("first_name")
+    lastname = request.data.get("last_name")
+    username = request.data.get("username")
+    email = request.data.get("email")
+    password = request.data.get("password")
+
+    # Create the user
+    # user = Users.objects.create_user(first_name = firstname, last_name = lastname, username=username, email=email, password=password)
+
+    # Generate a 6-digit code and save it to VerificationCode model
+    code = str(random.randint(100000, 999999))
+    Verification.objects.create(email = email, code=code)
+
+    # Send the code via email
+    send_mail(
+        "Your Verification Code",
+        f"Your verification code is {code}.",
+        settings.EMAIL_HOST_USER,
+        [email],
+        fail_silently=False,
+    )
+
+    return Response({"message": "Verification code sent to your email"}, status=201)
+@api_view(['POST'])
+def verify_register(request):
+    firstname = request.data.get("first_name")
+    lastname = request.data.get("last_name")
+    username = request.data.get("username")
+    email = request.data.get("email")
+    password = request.data.get("password")
+    code = request.data.get('code')
     
+    try: 
+        verification = Verification.objects.get(email=email, code = code)
+    except verification.DoesNotExist: 
+        return Response({"message": "Invalid verification code"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = Users.objects.create(first_name=firstname, last_name=lastname, username=username, email=email, password=password)
+    verification.delete()
+    return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST'])
 def place_order(request): 
     username = request.data.get('username')

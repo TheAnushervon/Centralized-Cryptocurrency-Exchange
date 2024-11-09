@@ -3,7 +3,7 @@
   
     let isRegistering = false; // Toggle between login and registration
     let loginData = { email: '', password: '' };
-    let registerData = { firstname: '', lastname: '', email: '', password: '' };
+    let registerData = { firstname: '', lastname: '',username: '', email: '', password: '' };
   
     // Toggle between login and registration
     function toggleForm() {
@@ -115,7 +115,10 @@
           <label for="lastname">Last Name</label>
           <input id="lastname" type="text" bind:value={registerData.lastname} placeholder="Last Name" />
         </div>
-  
+        <dib class ="input-group">
+          <label for="username">Username</label>
+          <input id ="username" type = "text" bind:value = {registerData.username} placeholder="Username"/>
+        </dib>
         <div class="input-group">
           <label for="email">Email</label>
           <input id="email" type="email" bind:value={registerData.email} placeholder="Email" />

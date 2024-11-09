@@ -93,3 +93,11 @@ class Orders(models.Model):
     class Meta: 
         db_table = "orders"
         
+class Verification(models.Model): 
+    # user= models.OneToOneField(Users, on_delete=models.CASCADE, db_column='user_id')
+    email = models.EmailField(unique=True)
+    code = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True) 
+    class Meta: 
+        db_table = "verification"
+        
