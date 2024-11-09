@@ -12,6 +12,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate,  get_user_model
 from django.contrib.auth.hashers import check_password
 import json 
+
+from django.conf import settings 
+from django.core.mail import send_mail
+
 # Create your views here.
 def test(request): 
     results = Condition.objects.all().values('time', 'value')
@@ -199,3 +203,19 @@ def cancel_order(request, order_id):
         return Response({"error":"No Such order_id exist"}, status=status.HTTP_404_NOT_FOUND)
     order.delete()
     return Response({"message": f"Successfully delete order"}, status=status.HTTP_200_OK)
+
+
+ADMIN_USER_EMAIL = "anushervon4j@gmail.com"
+
+def send_test_mail(request):
+    try:
+        send_mail(
+            "Testing sending mail", 
+            "Should work now!", 
+            settings.EMAIL_HOST_USER,  # Use settings.EMAIL_HOST_USER
+            [ADMIN_USER_EMAIL], 
+            fail_silently=False, 
+        )
+        return HttpResponse("<h1>Success!</h1>")
+    except Exception as e:  
+        return HttpResponse(f"<h1>Error: {e}</h1>")

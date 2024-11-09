@@ -145,3 +145,26 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS=['http://localhost:5173', 'http://127.0.0.1:5173']
+
+# from decouple import config
+
+# default backend
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT', '587')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True' 
+# EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', default='False')
+
+ADMIN_USER_NAME = os.getenv('ADMIN_USER_NAME', default='Admin user')
+ADMIN_USER_EMAIL = os.getenv('ADMIN_USER_EMAIL', default=None)
+
+MANAGERS=[]
+ADMINS=[]
+if all([ADMIN_USER_NAME, ADMIN_USER_EMAIL]):
+    ADMINS +=[
+        (f'{ADMIN_USER_NAME}', f'{ADMIN_USER_EMAIL}')
+    ]
+    MANAGERS=ADMINS

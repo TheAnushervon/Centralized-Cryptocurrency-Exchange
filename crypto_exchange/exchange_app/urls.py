@@ -17,4 +17,6 @@ urlpatterns = [
     path ('api/orders', views.orders, name = "orders"), 
     path ('api/orders/<int:order_id>/', views.specific_order, name = "specific_order"), 
     path('api/orders/<int:order_id>/cancel', views.cancel_order, name="cancel_order"), 
+
+    path('send_test_mail/', views.send_test_mail, name='send_test_mail'), 
 ]   
