@@ -125,17 +125,17 @@ def logout (request):
         return Response({"error": "Such user not loggined"}, status= status.HTTP_404_NOT_FOUND)
 @api_view(['POST'])
 def login(request):
-    username = request.data.get('username')
+    email = request.data.get('email')
     password = request.data.get('password')
 
 
     
-    User = get_user_model()
+    
 
     try:
         
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+        user = Users.objects.get(email = email)
+    except Users.DoesNotExist:
         user = None
     next = False 
     if (user.password == password):
@@ -194,10 +194,10 @@ def verify_register(request):
     email = request.data.get("email")
     password = request.data.get("password")
     code = request.data.get('code')
-    
+    print(f"email: {email}\ncode: {code}\n")
     try: 
         verification = Verification.objects.get(email=email, code = code)
-    except verification.DoesNotExist: 
+    except Verification.DoesNotExist: 
         return Response({"message": "Invalid verification code"}, status=status.HTTP_400_BAD_REQUEST)
     
     user = Users.objects.create(first_name=firstname, last_name=lastname, username=username, email=email, password=password)
