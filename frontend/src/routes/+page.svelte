@@ -1,7 +1,9 @@
 <script>
+  import { goto } from '$app/navigation'; 
   import { onMount } from 'svelte';
   import { navigate} from "svelte-routing"; // To redirect after successful registration
   import { pushState } from '$app/navigation'; 
+//   import { globalHistory } from 'svelte-routing/src/history';
   let isRegistering = false; // Toggle between login and registration
   let isVerifying = false;   // Toggle for verification stage
   let loginData = { email: '', password: '' };
@@ -25,9 +27,10 @@
 
       if (result.access) {
           localStorage.setItem("access_token", result.access);
-          pushState("/dashboard"); // Redirect to dashboard or desired page
-             console.log("here")
+        goto('/dashboard');    
+        console.log("here")
         }
+        // pushState("/dahsboard"); 
   }
 
   async function handleRegister() {

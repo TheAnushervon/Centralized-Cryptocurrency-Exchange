@@ -128,13 +128,16 @@ def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
 
-
+    
+    print(f"Email: {email}")
+    print(f"Password: {password}")
     
     
 
     try:
         
         user = Users.objects.get(email = email)
+        print("USER " , user) 
     except Users.DoesNotExist:
         user = None
     next = False 
@@ -148,10 +151,10 @@ def login(request):
         refresh_token = str(refresh)
 
         
-        user.jwt_tokens = json.dumps({
+        user.jwt_tokens = {
             'access_token': access_token,
             'refresh_token': refresh_token
-        })
+        }
         user.save()
 
         return Response({
