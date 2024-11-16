@@ -5,6 +5,7 @@ urlpatterns = [
     path('conditions/', views.test, name='conditions'),
     path('api/get_time_value/', views.get_time_value, name='get_time_value'),
     path('api/get_users/', views.get_users, name='get_users'), 
+    path('api/get_user/', views.get_user, name="get_user"), 
     #need to make it after api/deposit/user_id
     path('api/wallets/deposit/', views.deposit, name='deposit'), 
     path ('api/wallets/withdraw/<int:user_id>/', views.withdraw_currency, name="withdraw_currency"),

@@ -3,8 +3,8 @@ from exchange_app.models import Condition
 from django.http import JsonResponse, HttpResponse
 from .serializers import ConditionSerializer, UsersSerializer, WalletsSerializer, OrdersSerializer
 from .models import Condition, Users, Wallets, Orders, Verification
-
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status 
 
@@ -31,7 +31,20 @@ def get_time_value(request):
     serialized_data =ConditionSerializer(results, many=True)
     return JsonResponse(list(results), safe = False) 
   
-
+@api_view (['GET'])
+# @permission_classes([IsAuthenticated])
+def get_user(request): 
+    try:
+        user = request.user  # The authenticated user is attached to the request
+        print(f"user:{user}")
+        return Response({
+            "firstname": user.first_name,
+            "lastname": user.last_name,
+            "email": user.email,
+            "id": user.id, 
+        })
+    except Exception as e:
+        return Response({"error": "Failed to fetch user details."}, status=500)
 @api_view(['GET'])
 def get_users(request): 
     results = Users.objects.all()
@@ -178,7 +191,8 @@ def register(request):
     # Generate a 6-digit code and save it to VerificationCode model
     code = str(random.randint(100000, 999999))
     Verification.objects.create(email = email, code=code)
-
+    # ISSUE 
+    # CURRENT ISSUE IS THAT FOR OTHER EMAILS EXCEPT anushervon4j is not sending password
     # Send the code via email
     send_mail(
         "Your Verification Code",

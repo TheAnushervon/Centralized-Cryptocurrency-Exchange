@@ -7,21 +7,54 @@
     let balances = [];  // Array to hold all currency balances as objects { type, amount }
   
     // Fetch user data from backend
-    async function fetchUserData() {
-      const endpoint = 'http://localhost:8000/api/get_users';
-      const response = await fetch(endpoint);
-      const data = await response.json();
+    // async function fetchUserData() {
+    //   const endpoint = 'http://localhost:8000/api/get_user';
+    //   const response = await fetch(endpoint);
+    //   const data = await response.json();
       
-      user = {
-        firstname: data[0].firstname,
-        lastname: data[0].lastname,
-        email: data[0].email,
-        id: data[0].id
-      };
-      DashboardStore.set(user);
-      id = data[0].id;
-    }
+    //   user = {
+    //     firstname: data[0].firstname,
+    //     lastname: data[0].lastname,
+    //     email: data[0].email,
+    //     id: data[0].id
+    //   };
+    //   DashboardStore.set(user);
+    //   id = data[0].id;
+    // }
   
+    async function fetchUserData() {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+        console.error("No token found, redirecting to login.");
+        goto('/'); // Redirect to login
+        return;
+    }
+
+    const endpoint = 'http://localhost:8000/api/get_user';
+    const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        user = {
+            firstname: data.firstname,
+            lastname: data.lastname,
+            email: data.email
+        };
+        DashboardStore.set(user);
+        console.log("WORKING!")
+    } else {
+        console.error("Failed to fetch user data. Redirecting to login.");
+        goto('/'); // Redirect to login if unauthorized
+    }
+}
+
+
     async function fetchBalance() {
       const endpoint = `http://localhost:8000/api/wallets/${user.id}`;
       const response = await fetch(endpoint);
