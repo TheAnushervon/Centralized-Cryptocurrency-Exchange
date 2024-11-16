@@ -5,7 +5,7 @@
   let isRegistering = false; // Toggle between login and registration
   let isVerifying = false;   // Toggle for verification stage
   let loginData = { email: '', password: '' };
-  let registerData = { firstname: '', lastname: '', username: '', email: '', password: '', code: '' };
+  let registerData = { first_name: '', last_name: '', username: '', email: '', password: '', code: '' };
 
   // Toggle between login and registration
   function toggleForm() {
