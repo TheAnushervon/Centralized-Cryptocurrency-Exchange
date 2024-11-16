@@ -66,21 +66,27 @@ def get_wallets_currency(request, currency, user_id):
     return Response(serializer.data) 
 
 @api_view(['GET'])
-def get_all_wallets_currencies(request, user_id): 
-        results = Wallets.objects.filter(user_id=user_id)
+def get_all_wallets_currencies(request):
+    try: 
+        user = request.user        
+        results = Wallets.objects.filter(user_id=user.id)
+        print("RESULTS: ", results) 
         if results.exists(): 
             serialized = WalletsSerializer(results, many=True)
             return Response(serialized.data) 
         else:     
             return Response({"error": "There is no such user_id"}, status=status.HTTP_404_NOT_FOUND)
-
+    except Exception as e:
+        return Response({"error": "Failed to fetch user details."}, status=500)
 @api_view(['POST'])
-def withdraw_currency(request, user_id): 
-    if not Wallets.objects.filter(user_id=user_id).exists(): 
+def withdraw_currency(request):
+    user = request.user 
+    print("HERE USER: ", user)
+    if not Wallets.objects.filter(user_id=user.id).exists(): 
         return Response({"error": "There is no such user_id exists"}, status=status.HTTP_404_NOT_FOUND)
     currency = request.data.get('currency')
     amount_want = request.data.get('amount')
-    wallet = Wallets.objects.get(user_id=user_id, currency=currency)
+    wallet = Wallets.objects.get(user_id=user.id, currency=currency)
     if (wallet.balance < amount_want): 
         return Response({"error": "You can not withdraw such amount of currency"}, status=status.HTTP_409_CONFLICT)
     wallet.balance -=amount_want
@@ -88,15 +94,16 @@ def withdraw_currency(request, user_id):
     return Response({"message": "Withdrawal successful", "new_balance": wallet.balance, "currency": wallet.currency}, status=status.HTTP_200_OK)
 @api_view(['POST'])
 def deposit(request):
-    user_id = request.data.get('user_id')
+    # user_id = request.data.get('user_id')
+    user = request.user
     currency = request.data.get('currency')
     amount = request.data.get('amount')
 
-    if not user_id or not currency or not amount:
+    if  not currency or not amount:
         return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = Users.objects.get(id=user_id)
+        user = Users.objects.get(id=user.id)
     except Users.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -229,12 +236,16 @@ def verify_register(request):
 
 @api_view(['POST'])
 def place_order(request): 
-    username = request.data.get('username')
+    user = request.user
+    # username = request.data.get('username')
     type = request.data.get('type')
     price = request.data.get('price')
-    quantity = request.data.get('quantity')
+    quantity = request.data.get('qty')
     coin = request.data.get('coin')
-    user = Users.objects.get(username=username)
+    # type = user.type 
+    # price = user.price
+    # coin = user.coin 
+    user = Users.objects.get(username=user.username)
     orders = Orders.objects.create(user = user, type = type, price = price, quantity = quantity, coin = coin)
     orders.save()
     return HttpResponse(f'<h1>{orders}</h1>')

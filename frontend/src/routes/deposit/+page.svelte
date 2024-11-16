@@ -1,22 +1,23 @@
 <script>
-    let user_id = '';
     let currency = '';
     let amount = '';
   
     async function handleDeposit() {
+      const token = localStorage.getItem("access_token");
       const endpoint = 'http://localhost:8000/api/wallets/deposit/';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ user_id, currency, amount })
+        body: JSON.stringify({ currency, amount })
       });
   
       if (response.ok) {
         // Deposit successful, you can show a success message or redirect the user
         console.log('Deposit successful');
-        user_id = ''; 
+
         currency = ''; 
         amount = ''; 
       } else {
@@ -91,10 +92,7 @@
       <h2>Deposit</h2>
   
       <form on:submit|preventDefault={handleDeposit}>
-        <div class="input-group">
-          <label for="user_id">User ID</label>
-          <input id="user_id" type="text" bind:value={user_id} placeholder="Enter your User ID" />
-        </div>
+       
   
         <div class="input-group">
           <label for="currency">Currency</label>

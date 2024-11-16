@@ -1,13 +1,15 @@
 <script>
-  let user_id = 4; // You can get the user_id from the authentication or user context
+   // You can get the user_id from the authentication or user context
   let currency = '';
   let amount = '';
 
   async function handleWithdraw() {
-    const endpoint = `http://localhost:8000/api/wallets/withdraw/${user_id}/`;
+    const token = localStorage.getItem("access_token");
+    const endpoint = `http://localhost:8000/api/wallets/withdraw/`;
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${token}`, 
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ currency, amount })

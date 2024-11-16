@@ -56,8 +56,15 @@
 
 
     async function fetchBalance() {
-      const endpoint = `http://localhost:8000/api/wallets/${user.id}`;
-      const response = await fetch(endpoint);
+      const token = localStorage.getItem("access_token");
+      const endpoint = `http://localhost:8000/api/wallets/`;
+      const response = await fetch(endpoint, {
+        method: 'GET', 
+        headers: {
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       
       // Populate the balances array with currency type and amount
@@ -71,9 +78,9 @@
     onMount(fetchUserData);
   
     // Reactive statement to fetch balance only after id is available
-    $: if (user.id) {
-      fetchBalance();
-    }
+    
+      onMount(fetchBalance()) ;
+    
   
     function handleDeposit() {
       // Navigate to deposit page
