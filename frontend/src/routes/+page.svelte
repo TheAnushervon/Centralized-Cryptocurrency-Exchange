@@ -130,11 +130,11 @@
           <!-- Registration Form -->
           <div class="input-group" class:hide={isVerifying}>
               <label for="firstname">First Name</label>
-              <input id="firstname" type="text" bind:value={registerData.firstname} placeholder="First Name" />
+              <input id="firstname" type="text" bind:value={registerData.first_name} placeholder="First Name" />
           </div>
           <div class="input-group" class:hide={isVerifying}>
               <label for="lastname">Last Name</label>
-              <input id="lastname" type="text" bind:value={registerData.lastname} placeholder="Last Name" />
+              <input id="lastname" type="text" bind:value={registerData.last_name} placeholder="Last Name" />
           </div>
           <div class="input-group" class:hide={isVerifying}>
               <label for="username">Username</label>

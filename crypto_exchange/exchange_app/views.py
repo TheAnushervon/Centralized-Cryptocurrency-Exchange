@@ -194,7 +194,12 @@ def verify_register(request):
     email = request.data.get("email")
     password = request.data.get("password")
     code = request.data.get('code')
-    print(f"email: {email}\ncode: {code}\n")
+    print(f"First Name: {firstname}")
+    print(f"Last Name: {lastname}")
+    print(f"Username: {username}")
+    print(f"Email: {email}")
+    print(f"Password: {password}")
+    print(f"Code: {code}")
     try: 
         verification = Verification.objects.get(email=email, code = code)
     except Verification.DoesNotExist: 
