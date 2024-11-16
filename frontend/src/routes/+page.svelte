@@ -176,8 +176,12 @@
       {/if}
 
       <!-- Toggle between login and registration -->
-      <div class="toggle-link" on:click={toggleForm}>
+      <!-- <div class="toggle-link" on:click={toggleForm}>
           {isRegistering ? 'Already have an account? Login' : 'New user? Register'}
-      </div>
+      </div> -->
+      <!-- Toggle between login and registration -->
+    <button type="button" class="toggle-link" on:click={toggleForm}>
+    {isRegistering ? 'Already have an account? Login' : 'New user? Register'}
+  </button>
   </div>
 </div>
