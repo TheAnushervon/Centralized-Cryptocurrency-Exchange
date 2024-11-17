@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { writable } from 'svelte/store';
 
   let orders = writable({ bids: [], asks: [] });
@@ -7,48 +7,48 @@
   let showModal = writable(false);
 
   let selectedCoin = 'BTC';
-  let usdRate = 1; // You can enhance this by fetching live conversion rates.
+  let usdRate = 1;
+  let intervalId;
 
   const toggleModal = () => showModal.update(v => !v);
 
   const addOrder = (type, price, qty) => {
-  orders.update(currentOrders => {
-    if (type === 'buy') {
-      return { ...currentOrders, bids: [...currentOrders.bids, { price, quantity: qty }] };
-    } else if (type === 'sell') {
-      return { ...currentOrders, asks: [...currentOrders.asks, { price, quantity: qty }] };
-    }
-    return currentOrders;
-  });
-};
+    orders.update(currentOrders => {
+      if (type === 'buy') {
+        return { ...currentOrders, bids: [...currentOrders.bids, { price, quantity: qty }] };
+      } else if (type === 'sell') {
+        return { ...currentOrders, asks: [...currentOrders.asks, { price, quantity: qty }] };
+      }
+      return currentOrders;
+    });
+  };
 
   async function handlePlaceOrder(type, price, qty, coin) {
-  const token = localStorage.getItem("access_token");
-  const endpoint = `http://localhost:8000/api/orders/place`;
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ type, price, qty, coin })
-    });
-    if (response.ok) {
-      // Add the order to the store after successful server response
-      addOrder(type, price, qty);
-      toggleModal();
-    } else {
-      console.error('Order placement failed');
-      error.set('Failed to place order');
+    const token = localStorage.getItem("access_token");
+    const endpoint = `http://localhost:8000/api/orders/place`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type, price, qty, coin })
+      });
+      if (response.ok) {
+        addOrder(type, price, qty);
+        toggleModal();
+        await GetOrders(); // Fetch latest orders after placing a new one
+      } else {
+        console.error('Order placement failed');
+        error.set('Failed to place order');
+      }
+    } catch (err) {
+      console.error('Error placing order:', err);
+      error.set('Error placing order');
     }
-  } catch (err) {
-    console.error('Error placing order:', err);
-    error.set('Error placing order');
   }
-}
 
-  
   async function GetOrders() {
     const token = localStorage.getItem("access_token");
     const endpoint = `http://localhost:8000/api/orders`;
@@ -64,15 +64,9 @@
 
       if (response.ok) {
         const data = await response.json();
-        // Assuming the response data is an array of orders
         const bids = data.filter(order => order.type === 'buy');
         const asks = data.filter(order => order.type === 'sell');
-        orders.set({ bids, asks }); // Update the orders store with the fetched data
-        console.log("here")
-        console.log (orders["bids"]) 
-        orders.subscribe(value => {
-    console.log('Orders:', value);
-  });
+        orders.set({ bids, asks });
       } else {
         console.error('Failed to fetch orders');
         error.set('Failed to fetch orders');
@@ -83,25 +77,34 @@
     }
   }
 
+  function startPolling() {
+    GetOrders(); // Initial fetch
+    intervalId = setInterval(GetOrders, 5000); // Fetch every 5 seconds
+  }
+
   onMount(() => {
-    GetOrders();
+    startPolling();
+  });
+
+  onDestroy(() => {
+    if (intervalId) clearInterval(intervalId);
   });
 
   const handleSubmit = (event) => {
-  event.preventDefault();
-  const form = event.target;
-  const type = form.type.value;
-  const price = form.price.value;
-  const qty = form.qty.value;
-  const coin = form.coin.value;
+    event.preventDefault();
+    const form = event.target;
+    const type = form.type.value;
+    const price = form.price.value;
+    const qty = form.qty.value;
+    const coin = form.coin.value;
 
-  if (price && qty) {
-    handlePlaceOrder(type, price, qty, coin);
-    form.reset();
-  } else {
-    error.set('Please fill in all fields.');
-  }
-};
+    if (price && qty) {
+      handlePlaceOrder(type, price, qty, coin);
+      form.reset();
+    } else {
+      error.set('Please fill in all fields.');
+    }
+  };
 </script>
 
 <style>
