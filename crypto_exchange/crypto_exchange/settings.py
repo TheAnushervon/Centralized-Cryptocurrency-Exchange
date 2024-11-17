@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'drf_yasg', 
     'rest_framework_simplejwt', 
     'corsheaders', 
+    'django_celery_beat', 
     
 ]
 
@@ -172,3 +173,9 @@ if all([ADMIN_USER_NAME, ADMIN_USER_EMAIL]):
         (f'{ADMIN_USER_NAME}', f'{ADMIN_USER_EMAIL}')
     ]
     MANAGERS=ADMINS
+    
+# Celery Configuration Options
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Use Redis as the message broker
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
