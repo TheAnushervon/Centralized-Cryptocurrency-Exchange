@@ -12,20 +12,20 @@
   const toggleModal = () => showModal.update(v => !v);
 
   const addOrder = (type, price, qty) => {
-    orders.update(currentOrders => {
-      if (type === 'buy') {
-        currentOrders.bids.push({ price, qty });
-      } else if (type === 'sell') {
-        currentOrders.asks.push({ price, qty });
-      }
-      return currentOrders;
-    });
-    toggleModal();
-  };
+  orders.update(currentOrders => {
+    if (type === 'buy') {
+      return { ...currentOrders, bids: [...currentOrders.bids, { price, quantity: qty }] };
+    } else if (type === 'sell') {
+      return { ...currentOrders, asks: [...currentOrders.asks, { price, quantity: qty }] };
+    }
+    return currentOrders;
+  });
+};
 
   async function handlePlaceOrder(type, price, qty, coin) {
-    const token = localStorage.getItem("access_token");
-    const endpoint = `http://localhost:8000/api/orders/place`;
+  const token = localStorage.getItem("access_token");
+  const endpoint = `http://localhost:8000/api/orders/place`;
+  try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -35,30 +35,73 @@
       body: JSON.stringify({ type, price, qty, coin })
     });
     if (response.ok) {
-      type = '';
-      price = '';
-      qty = '';
+      // Add the order to the store after successful server response
+      addOrder(type, price, qty);
+      toggleModal();
     } else {
-      console.error('Withdrawal failed');
+      console.error('Order placement failed');
+      error.set('Failed to place order');
+    }
+  } catch (err) {
+    console.error('Error placing order:', err);
+    error.set('Error placing order');
+  }
+}
+
+  
+  async function GetOrders() {
+    const token = localStorage.getItem("access_token");
+    const endpoint = `http://localhost:8000/api/orders`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Assuming the response data is an array of orders
+        const bids = data.filter(order => order.type === 'buy');
+        const asks = data.filter(order => order.type === 'sell');
+        orders.set({ bids, asks }); // Update the orders store with the fetched data
+        console.log("here")
+        console.log (orders["bids"]) 
+        orders.subscribe(value => {
+    console.log('Orders:', value);
+  });
+      } else {
+        console.error('Failed to fetch orders');
+        error.set('Failed to fetch orders');
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      error.set('Error fetching orders');
     }
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const type = form.type.value;
-    const price = form.price.value;
-    const qty = form.qty.value;
-    const coin = form.coin.value;
+  onMount(() => {
+    GetOrders();
+  });
 
-    if (price && qty) {
-      addOrder(type, price, qty);
-      handlePlaceOrder(type, price, qty, coin); // Call handlePlaceOrder with the correct values
-      form.reset();
-    } else {
-      error.set('Please fill in all fields.');
-    }
-  };
+  const handleSubmit = (event) => {
+  event.preventDefault();
+  const form = event.target;
+  const type = form.type.value;
+  const price = form.price.value;
+  const qty = form.qty.value;
+  const coin = form.coin.value;
+
+  if (price && qty) {
+    handlePlaceOrder(type, price, qty, coin);
+    form.reset();
+  } else {
+    error.set('Please fill in all fields.');
+  }
+};
 </script>
 
 <style>
@@ -84,16 +127,16 @@
           <th>Price (USDT)</th>
           <th>Qty ({selectedCoin})</th>
           <th>Total ({selectedCoin})</th>
-          <th>≈USD</th>
+          
         </tr>
       </thead>
       <tbody>
-        {#each $orders.asks as { price, qty }}
+        {#each $orders.asks as { price, quantity }}
           <tr class="sell">
             <td>{price}</td>
-            <td>{qty}</td>
-            <td>{(+price * +qty).toFixed(2)}</td>
-            <td>{(usdRate * +price * +qty).toFixed(2)}</td>
+            <td>{quantity}</td>
+            <td>{(+price * +quantity).toFixed(2)}</td>
+
           </tr>
         {/each}
       </tbody>
@@ -105,16 +148,15 @@
           <th>Price (USDT)</th>
           <th>Qty ({selectedCoin})</th>
           <th>Total ({selectedCoin})</th>
-          <th>≈USD</th>
+          
         </tr>
       </thead>
       <tbody>
-        {#each $orders.bids as { price, qty }}
+        {#each $orders.bids as { price, quantity }}
           <tr class="buy">
             <td>{price}</td>
-            <td>{qty}</td>
-            <td>{(+price * +qty).toFixed(2)}</td>
-            <td>{(usdRate * +price * +qty).toFixed(2)}</td>
+            <td>{quantity}</td>
+            <td>{(+price * +quantity).toFixed(2)}</td>
           </tr>
         {/each}
       </tbody>
