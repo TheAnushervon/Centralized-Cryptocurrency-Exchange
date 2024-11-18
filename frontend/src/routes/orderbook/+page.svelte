@@ -9,6 +9,7 @@
   let selectedCoin = 'BTC';
   let usdRate = 1;
   let intervalId;
+  let matchOrdersIntervalId;
 
   const toggleModal = () => showModal.update(v => !v);
 
@@ -76,10 +77,57 @@
       error.set('Error fetching orders');
     }
   }
+  async function match(){
+    const token = localStorage.getItem("access_token"); 
+    const endpoint = `http://localhost:8000/api/match`;
+    try {
+      const response = await fetch (endpoint, {
+        method: 'POST', 
+        headers: {
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json'
+        }, 
+        body: JSON.stringify({})
+      }); 
+      if (response.ok) {
+        console.log('Order triggered successfully'); 
+      }
+      else{
+        console.log('Order failed during triggering'); 
+      }
+    } catch (err) {
+      console.error('Error triggering order matching: ', err); 
+    }
+
+  }
+  async function triggerMatchOrders() {
+    const token = localStorage.getItem("access_token");
+    const endpoint = `http://localhost:8000/api/trigger-match-orders`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      if (response.ok) {
+        console.log('Order matching triggered successfully');
+      } else {
+        console.error('Failed to trigger order matching');
+      }
+    } catch (err) {
+      console.error('Error triggering order matching:', err);
+    }
+  }
 
   function startPolling() {
     GetOrders(); // Initial fetch
-    intervalId = setInterval(GetOrders, 5000); // Fetch every 5 seconds
+    intervalId = setInterval(GetOrders, 5000); // Fetch orders every 5 seconds
+    // matchOrdersIntervalId = setInterval(triggerMatchOrders, 6000); // Trigger order matching every 6 seconds
+    matchOrdersIntervalId = setInterval(match, 6000); 
   }
 
   onMount(() => {
@@ -88,6 +136,7 @@
 
   onDestroy(() => {
     if (intervalId) clearInterval(intervalId);
+    if (matchOrdersIntervalId) clearInterval(matchOrdersIntervalId);
   });
 
   const handleSubmit = (event) => {
@@ -129,8 +178,7 @@
         <tr>
           <th>Price (USDT)</th>
           <th>Qty ({selectedCoin})</th>
-          <th>Total ({selectedCoin})</th>
-          
+          <th>Total (USDT)</th>
         </tr>
       </thead>
       <tbody>
@@ -139,7 +187,6 @@
             <td>{price}</td>
             <td>{quantity}</td>
             <td>{(+price * +quantity).toFixed(2)}</td>
-
           </tr>
         {/each}
       </tbody>
@@ -150,8 +197,7 @@
         <tr>
           <th>Price (USDT)</th>
           <th>Qty ({selectedCoin})</th>
-          <th>Total ({selectedCoin})</th>
-          
+          <th>Total (USDT)</th>
         </tr>
       </thead>
       <tbody>

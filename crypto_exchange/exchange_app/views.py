@@ -15,8 +15,11 @@ import json
 
 from django.conf import settings 
 from django.core.mail import send_mail
-
+from .tasks import match_orders
 import random
+
+from .orderbook import OrderBook, Order
+from django.db.models import F,Case, When, Value, IntegerField
 # Create your views here.
 def test(request): 
     results = Condition.objects.all().values('time', 'value')
@@ -288,3 +291,68 @@ def send_test_mail(request):
         return HttpResponse("<h1>Success!</h1>")
     except Exception as e:  
         return HttpResponse(f"<h1>Error: {e}</h1>")
+
+@api_view(['POST'])
+def trigger_match_orders(request): 
+    try: 
+        match_orders.delay()
+        return JsonResponse({'status': 'Task sent to Celery worker'})
+    except e: 
+        return JsonResponse({'status': 'Invalid request method'}, status=400)
+    
+# Assuming your OrderBook and Order classes are already defined
+order_book = OrderBook()
+
+@api_view(['POST'])
+def match(request):
+    # Fetch all open orders from the database
+    pending_orders = Orders.objects.filter(status="open").order_by("created_at")
+
+    # Add pending orders to the order book
+    for db_order in pending_orders:
+        order = Order(
+            order_id=db_order.id,
+            symbol=db_order.coin,
+            order_type=db_order.type,
+            price=float(db_order.price),
+            quantity=float(db_order.quantity),
+            timestamp=db_order.created_at.timestamp(),
+        )
+        order_book.add_order(order)
+
+    # Match orders
+    matched_orders = order_book.match_orders()
+
+    # Update the database and log matched orders
+    for match in matched_orders:
+        # Update buy and sell orders based on the matches
+        buy_order = Orders.objects.get(id=match['buy_order_id'])
+        sell_order = Orders.objects.get(id=match['sell_order_id'])
+
+        # Reduce quantities of the matched orders
+        buy_order.quantity = F('quantity') - match['quantity']
+        sell_order.quantity = F('quantity') - match['quantity']
+
+        # Update statuses if fully executed
+        # if buy_order.quantity <= 0:
+        #     buy_order.status = 'completed'
+        # if sell_order.quantity <= 0:
+        #     sell_order.status = 'completed'
+
+        buy_order.status = Case(
+            When(quantity__lte=0, then=Value('completed')),
+            default=Value('open'),
+            output_field=IntegerField(),
+        )
+        sell_order.status = Case(
+            When(quantity__lte=0, then=Value('completed')),
+            default=Value('open'),
+            output_field=IntegerField(),
+        )
+        
+        # Save changes
+        buy_order.save()
+        sell_order.save()
+
+    # Return the matched orders as a response
+    return Response({"matched_orders": matched_orders}, status=200)
