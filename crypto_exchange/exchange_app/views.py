@@ -284,7 +284,7 @@ def send_test_mail(request):
         send_mail(
             "Testing sending mail", 
             "Should work now!", 
-            settings.EMAIL_HOST_USER,  # Use settings.EMAIL_HOST_USER
+            settings.EMAIL_HOST_USER,  
             [ADMIN_USER_EMAIL], 
             fail_silently=False, 
         )
@@ -300,15 +300,16 @@ def trigger_match_orders(request):
     except e: 
         return JsonResponse({'status': 'Invalid request method'}, status=400)
     
-# Assuming your OrderBook and Order classes are already defined
+
 order_book = OrderBook()
 
 @api_view(['POST'])
 def match(request):
-    # Fetch all open orders from the database
+    from django.db.models import F, Case, When, Value
+    from django.db.models.fields import CharField
+
     pending_orders = Orders.objects.filter(status="open").order_by("created_at")
 
-    # Add pending orders to the order book
     for db_order in pending_orders:
         order = Order(
             order_id=db_order.id,
@@ -320,39 +321,33 @@ def match(request):
         )
         order_book.add_order(order)
 
-    # Match orders
     matched_orders = order_book.match_orders()
 
-    # Update the database and log matched orders
     for match in matched_orders:
-        # Update buy and sell orders based on the matches
-        buy_order = Orders.objects.get(id=match['buy_order_id'])
-        sell_order = Orders.objects.get(id=match['sell_order_id'])
+        try:
+            buy_order = Orders.objects.get(id=match['buy_order_id'])
+            sell_order = Orders.objects.get(id=match['sell_order_id'])
+        except Orders.DoesNotExist:
+            continue
 
-        # Reduce quantities of the matched orders
         buy_order.quantity = F('quantity') - match['quantity']
         sell_order.quantity = F('quantity') - match['quantity']
-
-        # Update statuses if fully executed
-        # if buy_order.quantity <= 0:
-        #     buy_order.status = 'completed'
-        # if sell_order.quantity <= 0:
-        #     sell_order.status = 'completed'
 
         buy_order.status = Case(
             When(quantity__lte=0, then=Value('completed')),
             default=Value('open'),
-            output_field=IntegerField(),
+            output_field=CharField(),
         )
         sell_order.status = Case(
             When(quantity__lte=0, then=Value('completed')),
             default=Value('open'),
-            output_field=IntegerField(),
+            output_field=CharField(),
         )
-        
-        # Save changes
+
         buy_order.save()
         sell_order.save()
+        
+    Orders.objects.filter(status="completed").delete()
+    Orders.objects.filter(quantity=0).delete()
 
-    # Return the matched orders as a response
     return Response({"matched_orders": matched_orders}, status=200)

@@ -4,22 +4,20 @@ import time
 class Order:
     def __init__(self, order_id, symbol, order_type, price, quantity, timestamp=None):
         self.order_id = order_id
-        self.symbol = symbol  # e.g., 'BTC/USDT'
-        self.order_type = order_type  # 'buy' or 'sell'
+        self.symbol = symbol  
+        self.order_type = order_type  
         self.price = price
         self.quantity = quantity
         self.timestamp = timestamp or time.time()
 
     def __lt__(self, other):
-        # Priority: price and timestamp (FIFO for same price)
         if self.order_type == 'buy':
-            return (self.price, self.timestamp) > (other.price, other.timestamp)  # Max-Heap for buy
+            return (self.price, self.timestamp) > (other.price, other.timestamp)  
         else:
-            return (self.price, self.timestamp) < (other.price, other.timestamp)  # Min-Heap for sell
+            return (self.price, self.timestamp) < (other.price, other.timestamp)  
 
 class OrderBook:
     def __init__(self):
-        # Stores orders for each coin (symbol)
         self.order_books = {}
 
     def add_order(self, order):
@@ -28,10 +26,10 @@ class OrderBook:
             self.order_books[order.symbol] = {'buy_orders': [], 'sell_orders': []}
 
         if order.order_type == 'buy':
-            # Add buy orders to a max-heap (negative price for max-heap behavior)
+            
             heapq.heappush(self.order_books[order.symbol]['buy_orders'], (-order.price, order.timestamp, order))
         else:
-            # Add sell orders to a min-heap
+            
             heapq.heappush(self.order_books[order.symbol]['sell_orders'], (order.price, order.timestamp, order))
 
     def match_orders(self):
@@ -43,20 +41,20 @@ class OrderBook:
             sell_orders = books['sell_orders']
 
             while buy_orders and sell_orders:
-                # Get the best buy and sell orders
+            
                 buy_price, buy_timestamp, buy_order = buy_orders[0]
                 sell_price, sell_timestamp, sell_order = sell_orders[0]
 
-                # Check if there's a price match
+            
                 if -buy_price >= sell_price:
-                    # Determine matched quantity
+            
                     matched_quantity = min(buy_order.quantity, sell_order.quantity)
 
-                    # Update the orders
+            
                     buy_order.quantity -= matched_quantity
                     sell_order.quantity -= matched_quantity
 
-                    # Record the match
+            
                     matched_orders.append({
                         'symbol': symbol,
                         'buy_order_id': buy_order.order_id,
@@ -65,13 +63,14 @@ class OrderBook:
                         'quantity': matched_quantity,
                     })
 
-                    # Remove fully executed orders
+            
                     if buy_order.quantity == 0:
                         heapq.heappop(buy_orders)
                     if sell_order.quantity == 0:
                         heapq.heappop(sell_orders)
+
                 else:
-                    # No more matching possible
+                    
                     break
 
         return matched_orders
